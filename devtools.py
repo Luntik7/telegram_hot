@@ -2,6 +2,8 @@ from pywinauto import Application
 import re
 from loguru import logger
 import json
+from pywinauto import Desktop, Application
+import time
 
 class DevTools:
     base_params_path = [                    #path to RootWebArea
@@ -33,9 +35,10 @@ class DevTools:
     ]
 
     def __init__(self) -> None:
-        self.app = Application(backend="uia").connect(title_re="DevTools")
-        if not self.app:
-           raise Exception("DevTools Application do not found")
+        if DevTools.is_process_running('DevTools', 10):
+            self.app = Application(backend="uia").connect(title_re="DevTools")
+        else:
+            raise Exception("DevTools Application do not found")
 
         self.main_window = self.app.top_window()
         if not self.main_window:
@@ -47,6 +50,16 @@ class DevTools:
         
         logger.info("DevTools launched successfully!")
         
+
+    @staticmethod
+    def is_process_running(process_name, timeout=1):
+        for i in range(int(timeout*5)):
+            windows = Desktop(backend="uia").windows(title_re=process_name)
+            if len(windows) > 0:
+                return True
+            time.sleep(0.2)
+        return False
+
 
     @staticmethod
     def get_control_by_path(main_control, params_path, skip_count=5):

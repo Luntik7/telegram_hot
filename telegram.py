@@ -23,8 +23,7 @@ class TelegramApp:
         self.main_window.move_window(x=self.x, y=self.y, width=self.width, height=self.height, repaint=True)
 
         if wait_network_loading:
-            time.sleep(0.2)
-            if not wait_while_img_dissapear(self.main_window, 'templates\\telegram\\network_loading.png', 0.5, time_to_wait*2, 0.95):
+            if not wait_while_img_dissapear(self.main_window, 'templates\\telegram\\network_loading.png', 0.25, time_to_wait*4, 0.95):
                 raise Exception(f'Telegram not loaded in {time_to_wait} sec')
             logger.info('Telegram loaded successfully!')
 
@@ -119,6 +118,42 @@ class TelegramApp:
                 return True
         
         raise Exception('Username do not setted!')
+    
+
+    def launch_app(self, launch_path, allow_msg_path, ok_path, link, app_name='App', timeout=30):
+        old_windows = list(self.app.windows())
+
+        for i in range(int(timeout / (timeout/10))):
+            self.write_to_saved_messages(link)  #1sec
+            if click_on_img(self.main_window, launch_path, 0.2, 45, 0.9):
+                break
+
+        for i in range(timeout):
+            if get_img_coords(self.main_window, allow_msg_path, 0.3, 3, 0.9): #0.9sec
+                click_on_img(self.main_window, ok_path, 0.3, 10, 0.9)
+
+            new_windows = list(self.app.windows())
+            if len(new_windows) > len(old_windows):
+                unique_windows = [w for w in new_windows if w not in old_windows]
+                app_window = unique_windows[0]
+                if app_window:
+                    logger.info(f'{app_name} window successfully launched!')
+                    return app_window
+
+        raise Exception(f'{app_name} window do not launched.')
+    
+
+    def open_dev_tools(self, app, focus_control_path, app_name='App', wait=30):
+        if app is None:
+            raise Exception(f'{app_name} window not found!')
+
+        if not click_on_img(app, focus_control_path, 0.2, wait*5, 0.9):
+            raise Exception('Focus control not found!')
+        time.sleep(0.3)
+        send_keys("{F12}")
+        time.sleep(0.2)
+        devtools = DevTools()
+        return devtools
     
 
     def write_to_saved_messages(self, message, delay=0.2):

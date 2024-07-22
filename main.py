@@ -3,6 +3,7 @@ from telegram import TelegramApp
 from telegram_hot import TelegramAppHOT
 from loguru import logger
 import random
+from devtools import DevTools
 
 
 TRIES_COUNT = 3
